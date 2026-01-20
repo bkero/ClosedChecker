@@ -3,7 +3,8 @@
 import csv
 import io
 import json
-from typing import Any, Optional
+from datetime import UTC
+from typing import Any
 
 from app.models.place import BusinessStatus, PlaceWithStatus
 
@@ -14,7 +15,7 @@ class ExportService:
     def export_json(
         self,
         places: list[PlaceWithStatus],
-        filter_status: Optional[list[BusinessStatus]] = None,
+        filter_status: list[BusinessStatus] | None = None,
         pretty: bool = True,
     ) -> str:
         """
@@ -44,7 +45,7 @@ class ExportService:
     def export_csv(
         self,
         places: list[PlaceWithStatus],
-        filter_status: Optional[list[BusinessStatus]] = None,
+        filter_status: list[BusinessStatus] | None = None,
     ) -> str:
         """
         Export places to CSV format.
@@ -138,7 +139,7 @@ class ExportService:
     def _filter_places(
         self,
         places: list[PlaceWithStatus],
-        filter_status: Optional[list[BusinessStatus]],
+        filter_status: list[BusinessStatus] | None,
     ) -> list[PlaceWithStatus]:
         """Filter places by status if specified."""
         if not filter_status:
@@ -176,9 +177,9 @@ class ExportService:
 
     def _get_timestamp(self) -> str:
         """Get current timestamp in ISO format."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
 
 # Global export service instance

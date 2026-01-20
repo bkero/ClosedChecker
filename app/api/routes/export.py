@@ -1,9 +1,8 @@
 """Routes for exporting places data."""
 
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import PlainTextResponse, Response
+from fastapi.responses import Response
 
 from app.models.place import BusinessStatus, PlaceWithStatus
 from app.models.session import job_store
@@ -15,7 +14,7 @@ router = APIRouter(prefix="/export", tags=["export"])
 @router.get("/json/{session_id}")
 async def export_json(
     session_id: str,
-    status: Optional[list[BusinessStatus]] = Query(None, description="Filter by status"),
+    status: list[BusinessStatus] | None = Query(None, description="Filter by status"),
     pretty: bool = Query(True, description="Pretty print JSON"),
 ) -> Response:
     """
@@ -53,7 +52,7 @@ async def export_json(
 @router.get("/csv/{session_id}")
 async def export_csv(
     session_id: str,
-    status: Optional[list[BusinessStatus]] = Query(None, description="Filter by status"),
+    status: list[BusinessStatus] | None = Query(None, description="Filter by status"),
 ) -> Response:
     """
     Export places with status as CSV.

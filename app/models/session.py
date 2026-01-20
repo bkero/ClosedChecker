@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -50,10 +50,10 @@ class Job(BaseModel):
     status: JobStatus = JobStatus.PENDING
     progress: JobProgress = Field(default_factory=JobProgress)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    result: Any | None = None
+    error: str | None = None
 
     def start(self) -> None:
         """Mark job as started."""
@@ -83,10 +83,10 @@ class UploadSession(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    filename: Optional[str] = None
-    parse_job_id: Optional[str] = None
-    check_job_id: Optional[str] = None
-    removal_job_id: Optional[str] = None
+    filename: str | None = None
+    parse_job_id: str | None = None
+    check_job_id: str | None = None
+    removal_job_id: str | None = None
     parsed_places: list[Any] = Field(default_factory=list)
     places_with_status: list[Any] = Field(default_factory=list)
 
@@ -95,9 +95,9 @@ class AuthStatus(BaseModel):
     """Status of Playwright authentication."""
 
     authenticated: bool = False
-    last_authenticated: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
-    error: Optional[str] = None
+    last_authenticated: datetime | None = None
+    expires_at: datetime | None = None
+    error: str | None = None
 
 
 # In-memory storage for jobs and sessions
@@ -114,7 +114,7 @@ class JobStore:
         self._jobs[job.id] = job
         return job
 
-    def get_job(self, job_id: str) -> Optional[Job]:
+    def get_job(self, job_id: str) -> Job | None:
         """Get a job by ID."""
         return self._jobs.get(job_id)
 
@@ -124,7 +124,7 @@ class JobStore:
         self._sessions[session.id] = session
         return session
 
-    def get_session(self, session_id: str) -> Optional[UploadSession]:
+    def get_session(self, session_id: str) -> UploadSession | None:
         """Get a session by ID."""
         return self._sessions.get(session_id)
 

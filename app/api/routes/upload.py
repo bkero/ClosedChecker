@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.core.exceptions import InvalidFileError, TakeoutParseError
 from app.models.place import ParsedPlace
-from app.models.session import JobType, job_store
+from app.models.session import job_store
 from app.services.takeout_parser import takeout_parser
 
 router = APIRouter(prefix="/upload", tags=["upload"])

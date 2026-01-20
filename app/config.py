@@ -1,7 +1,6 @@
 """Application configuration using Pydantic Settings."""
 
 from pathlib import Path
-from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -34,7 +33,7 @@ class Settings(BaseSettings):
     upload_temp_dir: Path = Path("./uploads")
 
     # Google Places API (user provides at runtime)
-    google_places_api_key: Optional[str] = None
+    google_places_api_key: str | None = None
 
     @property
     def max_upload_size_bytes(self) -> int:

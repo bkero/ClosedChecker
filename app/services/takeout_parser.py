@@ -5,7 +5,7 @@ import re
 import zipfile
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from app.core.exceptions import InvalidFileError, TakeoutParseError
@@ -101,7 +101,7 @@ class TakeoutParser:
         return json_files
 
     def _parse_json(
-        self, content: bytes, filename: str, source_list: Optional[str] = None
+        self, content: bytes, filename: str, source_list: str | None = None
     ) -> list[ParsedPlace]:
         """Parse a JSON/GeoJSON file."""
         try:
@@ -132,7 +132,7 @@ class TakeoutParser:
         )
 
     def _parse_geojson(
-        self, data: dict[str, Any], source_list: Optional[str] = None
+        self, data: dict[str, Any], source_list: str | None = None
     ) -> list[ParsedPlace]:
         """Parse GeoJSON FeatureCollection format."""
         places: list[ParsedPlace] = []
@@ -149,8 +149,8 @@ class TakeoutParser:
         return places
 
     def _parse_geojson_feature(
-        self, feature: dict[str, Any], source_list: Optional[str] = None
-    ) -> Optional[ParsedPlace]:
+        self, feature: dict[str, Any], source_list: str | None = None
+    ) -> ParsedPlace | None:
         """Parse a single GeoJSON feature."""
         properties = feature.get("properties", {})
         geometry = feature.get("geometry", {})
@@ -204,7 +204,7 @@ class TakeoutParser:
         )
 
     def _parse_places_list(
-        self, data: list[Any], source_list: Optional[str] = None
+        self, data: list[Any], source_list: str | None = None
     ) -> list[ParsedPlace]:
         """Parse a simple list of place objects."""
         places: list[ParsedPlace] = []
@@ -241,7 +241,7 @@ class TakeoutParser:
     # Pattern for extracting hex IDs from data parameter (e.g., !1s0x0:0xfa0b1bc4c1af47da)
     DATA_HEX_PATTERN = re.compile(r"!1s(0x[0-9a-fA-F]+:0x[0-9a-fA-F]+)")
 
-    def _extract_place_id(self, url: str) -> Optional[str]:
+    def _extract_place_id(self, url: str) -> str | None:
         """Extract place_id from a Google Maps URL."""
         # Try data parameter format with named place_id
         match = self.PLACE_ID_PATTERN.search(url)
@@ -269,14 +269,14 @@ class TakeoutParser:
 
         return None
 
-    def _extract_cid(self, url: str) -> Optional[str]:
+    def _extract_cid(self, url: str) -> str | None:
         """Extract CID (customer ID) from a Google Maps URL."""
         match = self.CID_PATTERN.search(url)
         if match:
             return match.group(1)
         return None
 
-    def _extract_name_from_url(self, url: str) -> Optional[str]:
+    def _extract_name_from_url(self, url: str) -> str | None:
         """Try to extract a place name from the URL path."""
         parsed = urlparse(url)
         path = parsed.path

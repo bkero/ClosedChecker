@@ -7,7 +7,6 @@ from app.core.exceptions import AuthenticationExpired, AuthenticationRequired
 from app.models.place import PlaceRemovalResult
 from app.models.session import AuthStatus, Job, JobStatus, JobType, job_store
 from app.services.playwright_automation import (
-    PlaywrightAutomation,
     get_auth_status,
     remove_places,
     start_authentication,

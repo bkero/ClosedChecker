@@ -1,9 +1,8 @@
 """Data models for places and business status."""
 
 from enum import Enum
-from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BusinessStatus(str, Enum):
@@ -30,33 +29,33 @@ class ParsedPlace(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     name: str
-    address: Optional[str] = None
+    address: str | None = None
     google_maps_url: str
-    place_id: Optional[str] = None
-    cid: Optional[str] = None
-    coordinates: Optional[Coordinates] = None
-    source_list: Optional[str] = None
+    place_id: str | None = None
+    cid: str | None = None
+    coordinates: Coordinates | None = None
+    source_list: str | None = None
 
 
 class PlaceWithStatus(BaseModel):
     """A place with its business status from Google Places API."""
 
     name: str
-    address: Optional[str] = None
+    address: str | None = None
     google_maps_url: str
-    place_id: Optional[str] = None
-    cid: Optional[str] = None
+    place_id: str | None = None
+    cid: str | None = None
     business_status: BusinessStatus = BusinessStatus.UNKNOWN
-    coordinates: Optional[Coordinates] = None
-    source_list: Optional[str] = None
-    api_error: Optional[str] = None
+    coordinates: Coordinates | None = None
+    source_list: str | None = None
+    api_error: str | None = None
 
     @classmethod
     def from_parsed_place(
         cls,
         place: ParsedPlace,
         business_status: BusinessStatus = BusinessStatus.UNKNOWN,
-        api_error: Optional[str] = None,
+        api_error: str | None = None,
     ) -> "PlaceWithStatus":
         """Create from a parsed place with status information."""
         return cls(
@@ -78,7 +77,7 @@ class PlaceRemovalResult(BaseModel):
     google_maps_url: str
     name: str
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class StatusCheckRequest(BaseModel):

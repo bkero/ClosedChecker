@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from app.models.place import BusinessStatus, Coordinates, PlaceWithStatus
 from app.services.export_service import ExportService
 

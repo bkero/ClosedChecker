@@ -1,12 +1,11 @@
 """Custom exceptions for the application."""
 
-from typing import Optional
 
 
 class AppException(Exception):
     """Base exception for the application."""
 
-    def __init__(self, message: str, details: Optional[str] = None):
+    def __init__(self, message: str, details: str | None = None):
         self.message = message
         self.details = details
         super().__init__(message)

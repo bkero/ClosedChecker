@@ -1,7 +1,8 @@
 """Google Places API (New) client for checking business status."""
 
 import asyncio
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import httpx
 
@@ -16,9 +17,9 @@ class PlacesAPIClient:
     # New Places API base URL
     BASE_URL = "https://places.googleapis.com/v1"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> "PlacesAPIClient":
         self._client = httpx.AsyncClient(timeout=30.0)
@@ -146,7 +147,7 @@ class PlacesAPIClient:
     async def search_text(
         self,
         query: str,
-        location_bias: Optional[tuple[float, float]] = None,
+        location_bias: tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Search for places using text query."""
         data: dict[str, Any] = {
@@ -168,7 +169,7 @@ class PlacesAPIClient:
     async def check_place_status(self, place: ParsedPlace) -> PlaceWithStatus:
         """Check the business status of a place."""
         business_status = BusinessStatus.UNKNOWN
-        api_error: Optional[str] = None
+        api_error: str | None = None
         resolved_place_id = place.place_id
 
         try:
@@ -239,7 +240,7 @@ class PlacesAPIClient:
     async def check_places_batch(
         self,
         places: list[ParsedPlace],
-        progress_callback: Optional[Callable[[int, int, str], None]] = None,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> list[PlaceWithStatus]:
         """
         Check business status for a batch of places.
@@ -294,7 +295,7 @@ class PlacesAPIClient:
 async def check_places_status(
     api_key: str,
     places: list[ParsedPlace],
-    progress_callback: Optional[Callable[[int, int, str], None]] = None,
+    progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> list[PlaceWithStatus]:
     """
     Convenience function to check status of places.

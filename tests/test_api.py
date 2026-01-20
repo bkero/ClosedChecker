@@ -4,8 +4,6 @@ import json
 import zipfile
 from io import BytesIO
 
-import pytest
-
 
 class TestHealthEndpoint:
     """Tests for health check endpoint."""

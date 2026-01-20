@@ -2,11 +2,12 @@
 
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
-from playwright.async_api import Browser, BrowserContext, Page, async_playwright
+from playwright.async_api import Browser, BrowserContext, async_playwright
 
 from app.config import settings
 from app.core.exceptions import AuthenticationExpired, AuthenticationRequired, PlaywrightError
@@ -24,7 +25,7 @@ class PlaywrightAutomation:
         self.auth_dir = settings.playwright_auth_dir
         self.headless = settings.playwright_headless
         self.timeout = settings.playwright_timeout_ms
-        self._browser: Optional[Browser] = None
+        self._browser: Browser | None = None
         self._playwright: Any = None
 
     @property
@@ -91,7 +92,7 @@ class PlaywrightAutomation:
         browser = await self._get_browser()
 
         # Load saved state
-        with open(self.auth_state_path, "r") as f:
+        with open(self.auth_state_path) as f:
             storage_state = json.load(f)
 
         context = await browser.new_context(
@@ -109,7 +110,7 @@ class PlaywrightAutomation:
 
     async def start_auth_session(
         self,
-        on_ready: Optional[Callable[[], None]] = None,
+        on_ready: Callable[[], None] | None = None,
     ) -> bool:
         """
         Start an authentication session for the user to log in manually.
@@ -288,7 +289,7 @@ class PlaywrightAutomation:
     async def remove_places_batch(
         self,
         places: list[dict[str, str]],
-        progress_callback: Optional[Callable[[int, int, str], None]] = None,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> list[PlaceRemovalResult]:
         """
         Remove multiple places from saved lists.
@@ -338,7 +339,7 @@ async def start_authentication() -> bool:
 
 async def remove_places(
     places: list[dict[str, str]],
-    progress_callback: Optional[Callable[[int, int, str], None]] = None,
+    progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> list[PlaceRemovalResult]:
     """Remove places from saved lists."""
     async with PlaywrightAutomation() as automation:

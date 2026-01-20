@@ -1,7 +1,5 @@
 """Routes for checking place status via Google Places API."""
 
-import asyncio
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -163,7 +161,7 @@ async def get_status_check_result(job_id: str) -> StatusCheckResult:
 @router.get("/results/{session_id}", response_model=list[PlaceWithStatus])
 async def get_places_with_status(
     session_id: str,
-    status: Optional[list[BusinessStatus]] = Query(None, description="Filter by status"),
+    status: list[BusinessStatus] | None = Query(None, description="Filter by status"),
 ) -> list[PlaceWithStatus]:
     """
     Get places with their checked status for a session.
