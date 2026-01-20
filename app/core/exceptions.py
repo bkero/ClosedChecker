@@ -1,7 +1,6 @@
 """Custom exceptions for the application."""
 
 
-
 class AppException(Exception):
     """Base exception for the application."""
 

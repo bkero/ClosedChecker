@@ -1,6 +1,5 @@
 """Routes for checking place status via Google Places API."""
 
-
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 

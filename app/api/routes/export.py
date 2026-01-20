@@ -1,6 +1,5 @@
 """Routes for exporting places data."""
 
-
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 
