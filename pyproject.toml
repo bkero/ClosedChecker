@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gmaps-closed"
+name = "ClosedChecker"
 version = "1.0.0"
 description = "Identify and remove closed places from Google Maps saved lists"
 readme = "README.md"
@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-gmaps-closed = "app.main:main"
+ClosedChecker = "app.main:main"
 
 [tool.ruff]
 line-length = 100

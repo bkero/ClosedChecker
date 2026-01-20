@@ -10,7 +10,7 @@ Please be respectful and considerate in all interactions. We welcome contributor
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/yourusername/gmaps-closed/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/yourusername/ClosedChecker/issues)
 2. If not, create a new issue with:
    - A clear, descriptive title
    - Steps to reproduce the bug
@@ -49,8 +49,8 @@ Please be respectful and considerate in all interactions. We welcome contributor
 
 ```bash
 # Clone your fork
-git clone https://github.com/yourusername/gmaps-closed.git
-cd gmaps-closed
+git clone https://github.com/yourusername/ClosedChecker.git
+cd ClosedChecker
 
 # Create virtual environment
 python -m venv venv

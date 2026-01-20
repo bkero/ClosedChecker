@@ -46,8 +46,8 @@ The web interface provides a simple workflow:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/gmaps-closed.git
-cd gmaps-closed
+git clone https://github.com/yourusername/ClosedChecker.git
+cd ClosedChecker
 
 # Create a virtual environment
 python -m venv venv
