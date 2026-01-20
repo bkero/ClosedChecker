@@ -27,9 +27,7 @@ class RemovalRequest(BaseModel):
     """Request to remove places."""
 
     session_id: str
-    place_urls: list[str] = Field(
-        ..., min_length=1, description="URLs of places to remove"
-    )
+    place_urls: list[str] = Field(..., min_length=1, description="URLs of places to remove")
 
 
 class RemovalResponse(BaseModel):
@@ -103,17 +101,17 @@ async def _run_removal(
         return
 
     # Build list of places to remove with names
-    places_with_status = {
-        p["google_maps_url"]: p for p in session.places_with_status
-    }
+    places_with_status = {p["google_maps_url"]: p for p in session.places_with_status}
 
     places_to_remove = []
     for url in place_urls:
         place_data = places_with_status.get(url, {})
-        places_to_remove.append({
-            "url": url,
-            "name": place_data.get("name", "Unknown Place"),
-        })
+        places_to_remove.append(
+            {
+                "url": url,
+                "name": place_data.get("name", "Unknown Place"),
+            }
+        )
 
     job.start()
     job.progress.total = len(places_to_remove)
@@ -128,14 +126,16 @@ async def _run_removal(
         successful = sum(1 for r in results if r.success)
         failed = len(results) - successful
 
-        job.complete({
-            "results": [r.model_dump() for r in results],
-            "summary": {
-                "total": len(results),
-                "successful": successful,
-                "failed": failed,
-            },
-        })
+        job.complete(
+            {
+                "results": [r.model_dump() for r in results],
+                "summary": {
+                    "total": len(results),
+                    "successful": successful,
+                    "failed": failed,
+                },
+            }
+        )
 
     except AuthenticationRequired as e:
         job.fail(e.message)
@@ -216,9 +216,7 @@ async def get_removal_result(job_id: str) -> RemovalResult:
     if job.status == JobStatus.FAILED:
         result.error = job.error
     elif job.status == JobStatus.COMPLETED and job.result:
-        result.results = [
-            PlaceRemovalResult(**r) for r in job.result.get("results", [])
-        ]
+        result.results = [PlaceRemovalResult(**r) for r in job.result.get("results", [])]
         result.summary = job.result.get("summary")
 
     return result
