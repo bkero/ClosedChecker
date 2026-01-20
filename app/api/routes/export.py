@@ -15,9 +15,7 @@ router = APIRouter(prefix="/export", tags=["export"])
 @router.get("/json/{session_id}")
 async def export_json(
     session_id: str,
-    status: Optional[list[BusinessStatus]] = Query(
-        None, description="Filter by status"
-    ),
+    status: Optional[list[BusinessStatus]] = Query(None, description="Filter by status"),
     pretty: bool = Query(True, description="Pretty print JSON"),
 ) -> Response:
     """
@@ -55,9 +53,7 @@ async def export_json(
 @router.get("/csv/{session_id}")
 async def export_csv(
     session_id: str,
-    status: Optional[list[BusinessStatus]] = Query(
-        None, description="Filter by status"
-    ),
+    status: Optional[list[BusinessStatus]] = Query(None, description="Filter by status"),
 ) -> Response:
     """
     Export places with status as CSV.

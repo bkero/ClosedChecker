@@ -47,10 +47,7 @@ class TestTakeoutParser:
         # Create a ZIP file in memory
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr(
-                "Takeout/Maps (your places)/Saved Places.json",
-                json.dumps(sample_geojson)
-            )
+            zf.writestr("Takeout/Maps (your places)/Saved Places.json", json.dumps(sample_geojson))
         zip_buffer.seek(0)
 
         places = self.parser.parse_file(zip_buffer.read(), "takeout.zip")
@@ -62,14 +59,8 @@ class TestTakeoutParser:
         """Test parsing a ZIP with multiple saved lists."""
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr(
-                "Takeout/Maps (your places)/Saved Places.json",
-                json.dumps(sample_geojson)
-            )
-            zf.writestr(
-                "Takeout/Maps (your places)/Want to go.json",
-                json.dumps(sample_geojson)
-            )
+            zf.writestr("Takeout/Maps (your places)/Saved Places.json", json.dumps(sample_geojson))
+            zf.writestr("Takeout/Maps (your places)/Want to go.json", json.dumps(sample_geojson))
         zip_buffer.seek(0)
 
         places = self.parser.parse_file(zip_buffer.read(), "takeout.zip")
@@ -88,10 +79,7 @@ class TestTakeoutParser:
 
     def test_parse_empty_features(self):
         """Test parsing GeoJSON with no features."""
-        empty_geojson = json.dumps({
-            "type": "FeatureCollection",
-            "features": []
-        }).encode("utf-8")
+        empty_geojson = json.dumps({"type": "FeatureCollection", "features": []}).encode("utf-8")
 
         places = self.parser.parse_file(empty_geojson, "test.json")
         assert len(places) == 0
@@ -114,16 +102,11 @@ class TestTakeoutParser:
             "features": [
                 {
                     "geometry": {"coordinates": [0, 0], "type": "Point"},
-                    "properties": {
-                        "location": {"name": "No URL Place"}
-                    },
-                    "type": "Feature"
+                    "properties": {"location": {"name": "No URL Place"}},
+                    "type": "Feature",
                 }
-            ]
+            ],
         }
 
-        places = self.parser.parse_file(
-            json.dumps(geojson).encode("utf-8"),
-            "test.json"
-        )
+        places = self.parser.parse_file(json.dumps(geojson).encode("utf-8"), "test.json")
         assert len(places) == 0

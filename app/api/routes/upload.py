@@ -50,7 +50,9 @@ async def upload_takeout_file(
         raise HTTPException(status_code=400, detail="No filename provided")
 
     filename = file.filename.lower()
-    if not (filename.endswith(".zip") or filename.endswith(".json") or filename.endswith(".geojson")):
+    if not (
+        filename.endswith(".zip") or filename.endswith(".json") or filename.endswith(".geojson")
+    ):
         raise HTTPException(
             status_code=400,
             detail="Invalid file type. Please upload a ZIP or JSON file.",

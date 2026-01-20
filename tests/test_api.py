@@ -25,8 +25,7 @@ class TestUploadEndpoints:
         content = json.dumps(sample_geojson).encode("utf-8")
 
         response = client.post(
-            "/api/upload/file",
-            files={"file": ("places.json", content, "application/json")}
+            "/api/upload/file", files={"file": ("places.json", content, "application/json")}
         )
 
         assert response.status_code == 200
@@ -38,15 +37,12 @@ class TestUploadEndpoints:
         """Test uploading a ZIP file."""
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zf:
-            zf.writestr(
-                "Takeout/Maps (your places)/Saved Places.json",
-                json.dumps(sample_geojson)
-            )
+            zf.writestr("Takeout/Maps (your places)/Saved Places.json", json.dumps(sample_geojson))
         zip_buffer.seek(0)
 
         response = client.post(
             "/api/upload/file",
-            files={"file": ("takeout.zip", zip_buffer.read(), "application/zip")}
+            files={"file": ("takeout.zip", zip_buffer.read(), "application/zip")},
         )
 
         assert response.status_code == 200
@@ -56,8 +52,7 @@ class TestUploadEndpoints:
     def test_upload_invalid_file_type(self, client):
         """Test that uploading invalid file type returns error."""
         response = client.post(
-            "/api/upload/file",
-            files={"file": ("test.txt", b"hello", "text/plain")}
+            "/api/upload/file", files={"file": ("test.txt", b"hello", "text/plain")}
         )
 
         assert response.status_code == 400
@@ -65,22 +60,17 @@ class TestUploadEndpoints:
     def test_upload_invalid_json(self, client):
         """Test that uploading invalid JSON returns error."""
         response = client.post(
-            "/api/upload/file",
-            files={"file": ("places.json", b"not json", "application/json")}
+            "/api/upload/file", files={"file": ("places.json", b"not json", "application/json")}
         )
 
         assert response.status_code == 400
 
     def test_upload_empty_places(self, client):
         """Test that uploading file with no places returns error."""
-        empty_geojson = json.dumps({
-            "type": "FeatureCollection",
-            "features": []
-        }).encode("utf-8")
+        empty_geojson = json.dumps({"type": "FeatureCollection", "features": []}).encode("utf-8")
 
         response = client.post(
-            "/api/upload/file",
-            files={"file": ("places.json", empty_geojson, "application/json")}
+            "/api/upload/file", files={"file": ("places.json", empty_geojson, "application/json")}
         )
 
         assert response.status_code == 400
@@ -95,8 +85,7 @@ class TestSessionEndpoints:
         # First upload a file
         content = json.dumps(sample_geojson).encode("utf-8")
         upload_response = client.post(
-            "/api/upload/file",
-            files={"file": ("places.json", content, "application/json")}
+            "/api/upload/file", files={"file": ("places.json", content, "application/json")}
         )
         session_id = upload_response.json()["session_id"]
 
@@ -122,8 +111,7 @@ class TestExportEndpoints:
         # Upload file
         content = json.dumps(sample_geojson).encode("utf-8")
         upload_response = client.post(
-            "/api/upload/file",
-            files={"file": ("places.json", content, "application/json")}
+            "/api/upload/file", files={"file": ("places.json", content, "application/json")}
         )
         session_id = upload_response.json()["session_id"]
 

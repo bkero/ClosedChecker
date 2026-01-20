@@ -54,8 +54,7 @@ class TestExportService:
     def test_export_json_filtered(self):
         """Test exporting filtered places as JSON."""
         result = self.service.export_json(
-            self.places,
-            filter_status=[BusinessStatus.CLOSED_PERMANENTLY]
+            self.places, filter_status=[BusinessStatus.CLOSED_PERMANENTLY]
         )
         data = json.loads(result)
 
@@ -67,10 +66,7 @@ class TestExportService:
         """Test exporting with multiple status filters."""
         result = self.service.export_json(
             self.places,
-            filter_status=[
-                BusinessStatus.CLOSED_TEMPORARILY,
-                BusinessStatus.CLOSED_PERMANENTLY
-            ]
+            filter_status=[BusinessStatus.CLOSED_TEMPORARILY, BusinessStatus.CLOSED_PERMANENTLY],
         )
         data = json.loads(result)
 
@@ -100,10 +96,7 @@ class TestExportService:
 
     def test_export_csv_filtered(self):
         """Test exporting filtered CSV."""
-        result = self.service.export_csv(
-            self.places,
-            filter_status=[BusinessStatus.OPERATIONAL]
-        )
+        result = self.service.export_csv(self.places, filter_status=[BusinessStatus.OPERATIONAL])
 
         lines = result.strip().split("\n")
         assert len(lines) == 2  # header + 1 place

@@ -35,9 +35,7 @@ class TakeoutParser:
         """Parse a file (ZIP or JSON) and return list of places."""
         if filename.lower().endswith(".zip"):
             return self._parse_zip(file_content)
-        elif filename.lower().endswith(".json") or filename.lower().endswith(
-            ".geojson"
-        ):
+        elif filename.lower().endswith(".json") or filename.lower().endswith(".geojson"):
             return self._parse_json(file_content, filename)
         else:
             raise InvalidFileError(
@@ -171,16 +169,8 @@ class TakeoutParser:
 
         # Extract location info (try both lowercase and capitalized keys)
         location = properties.get("location") or properties.get("Location") or {}
-        name = (
-            location.get("name")
-            or location.get("Business Name")
-            or ""
-        )
-        address = (
-            location.get("address")
-            or location.get("Address")
-            or ""
-        )
+        name = location.get("name") or location.get("Business Name") or ""
+        address = location.get("address") or location.get("Address") or ""
 
         # Fallback to properties directly
         if not name:

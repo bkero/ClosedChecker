@@ -177,9 +177,7 @@ class PlacesAPIClient:
                 result = await self.get_place_details(place.place_id)
                 if not result.get("not_found"):
                     business_status = self._extract_business_status(result)
-                    return PlaceWithStatus.from_parsed_place(
-                        place, business_status=business_status
-                    )
+                    return PlaceWithStatus.from_parsed_place(place, business_status=business_status)
 
             # Use text search with name and address
             query = place.name

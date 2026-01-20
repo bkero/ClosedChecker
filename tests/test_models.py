@@ -41,10 +41,7 @@ class TestParsedPlace:
 
     def test_create_minimal_place(self):
         """Test creating a place with minimal required fields."""
-        place = ParsedPlace(
-            name="Test Place",
-            google_maps_url="http://maps.google.com/?cid=123"
-        )
+        place = ParsedPlace(name="Test Place", google_maps_url="http://maps.google.com/?cid=123")
         assert place.name == "Test Place"
         assert place.address is None
         assert place.place_id is None
@@ -58,7 +55,7 @@ class TestParsedPlace:
             place_id="ChIJ123",
             cid="123",
             coordinates=Coordinates(latitude=45.5, longitude=-122.6),
-            source_list="Saved Places"
+            source_list="Saved Places",
         )
         assert place.name == "Test Place"
         assert place.address == "123 Main St"
@@ -74,12 +71,11 @@ class TestPlaceWithStatus:
         parsed = ParsedPlace(
             name="Test Place",
             google_maps_url="http://maps.google.com/?cid=123",
-            address="123 Main St"
+            address="123 Main St",
         )
 
         with_status = PlaceWithStatus.from_parsed_place(
-            parsed,
-            business_status=BusinessStatus.OPERATIONAL
+            parsed, business_status=BusinessStatus.OPERATIONAL
         )
 
         assert with_status.name == "Test Place"
@@ -87,10 +83,7 @@ class TestPlaceWithStatus:
 
     def test_default_status_is_unknown(self):
         """Test that default business status is UNKNOWN."""
-        place = PlaceWithStatus(
-            name="Test",
-            google_maps_url="http://example.com"
-        )
+        place = PlaceWithStatus(name="Test", google_maps_url="http://example.com")
         assert place.business_status == BusinessStatus.UNKNOWN
 
 

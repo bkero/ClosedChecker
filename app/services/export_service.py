@@ -62,34 +62,38 @@ class ExportService:
         writer = csv.writer(output)
 
         # Header
-        writer.writerow([
-            "Name",
-            "Address",
-            "Business Status",
-            "Google Maps URL",
-            "Place ID",
-            "Latitude",
-            "Longitude",
-            "Source List",
-            "API Error",
-        ])
+        writer.writerow(
+            [
+                "Name",
+                "Address",
+                "Business Status",
+                "Google Maps URL",
+                "Place ID",
+                "Latitude",
+                "Longitude",
+                "Source List",
+                "API Error",
+            ]
+        )
 
         # Data rows
         for place in filtered:
             lat = place.coordinates.latitude if place.coordinates else ""
             lng = place.coordinates.longitude if place.coordinates else ""
 
-            writer.writerow([
-                place.name,
-                place.address or "",
-                place.business_status.value,
-                place.google_maps_url,
-                place.place_id or "",
-                lat,
-                lng,
-                place.source_list or "",
-                place.api_error or "",
-            ])
+            writer.writerow(
+                [
+                    place.name,
+                    place.address or "",
+                    place.business_status.value,
+                    place.google_maps_url,
+                    place.place_id or "",
+                    lat,
+                    lng,
+                    place.source_list or "",
+                    place.api_error or "",
+                ]
+            )
 
         return output.getvalue()
 
@@ -173,6 +177,7 @@ class ExportService:
     def _get_timestamp(self) -> str:
         """Get current timestamp in ISO format."""
         from datetime import datetime, timezone
+
         return datetime.now(timezone.utc).isoformat()
 
 

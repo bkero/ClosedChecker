@@ -80,10 +80,14 @@ async def websocket_progress(websocket: WebSocket, job_id: str) -> None:
         # Initial status check
         job = job_store.get_job(job_id)
         if not job:
-            await websocket.send_text(json.dumps({
-                "error": "Job not found",
-                "status": "not_found",
-            }))
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "error": "Job not found",
+                        "status": "not_found",
+                    }
+                )
+            )
             return
 
         # Send initial state

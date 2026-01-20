@@ -69,9 +69,15 @@ async def _run_status_check(
         # Generate summary
         summary = {
             "total": len(results),
-            "operational": sum(1 for r in results if r.business_status == BusinessStatus.OPERATIONAL),
-            "closed_temporarily": sum(1 for r in results if r.business_status == BusinessStatus.CLOSED_TEMPORARILY),
-            "closed_permanently": sum(1 for r in results if r.business_status == BusinessStatus.CLOSED_PERMANENTLY),
+            "operational": sum(
+                1 for r in results if r.business_status == BusinessStatus.OPERATIONAL
+            ),
+            "closed_temporarily": sum(
+                1 for r in results if r.business_status == BusinessStatus.CLOSED_TEMPORARILY
+            ),
+            "closed_permanently": sum(
+                1 for r in results if r.business_status == BusinessStatus.CLOSED_PERMANENTLY
+            ),
             "unknown": sum(1 for r in results if r.business_status == BusinessStatus.UNKNOWN),
         }
 
@@ -157,9 +163,7 @@ async def get_status_check_result(job_id: str) -> StatusCheckResult:
 @router.get("/results/{session_id}", response_model=list[PlaceWithStatus])
 async def get_places_with_status(
     session_id: str,
-    status: Optional[list[BusinessStatus]] = Query(
-        None, description="Filter by status"
-    ),
+    status: Optional[list[BusinessStatus]] = Query(None, description="Filter by status"),
 ) -> list[PlaceWithStatus]:
     """
     Get places with their checked status for a session.
@@ -203,9 +207,15 @@ async def get_status_summary(session_id: str) -> dict:
         "session_id": session_id,
         "total": len(places),
         "by_status": {
-            "operational": sum(1 for p in places if p.business_status == BusinessStatus.OPERATIONAL),
-            "closed_temporarily": sum(1 for p in places if p.business_status == BusinessStatus.CLOSED_TEMPORARILY),
-            "closed_permanently": sum(1 for p in places if p.business_status == BusinessStatus.CLOSED_PERMANENTLY),
+            "operational": sum(
+                1 for p in places if p.business_status == BusinessStatus.OPERATIONAL
+            ),
+            "closed_temporarily": sum(
+                1 for p in places if p.business_status == BusinessStatus.CLOSED_TEMPORARILY
+            ),
+            "closed_permanently": sum(
+                1 for p in places if p.business_status == BusinessStatus.CLOSED_PERMANENTLY
+            ),
             "unknown": sum(1 for p in places if p.business_status == BusinessStatus.UNKNOWN),
         },
     }

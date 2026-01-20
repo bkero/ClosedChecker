@@ -163,7 +163,9 @@ class PlaywrightAutomation:
                 # Try alternative detection
                 await asyncio.sleep(2)
                 # Check if we're on maps and there's no sign-in button
-                signin_button = await page.query_selector('a[href*="accounts.google.com/ServiceLogin"]')
+                signin_button = await page.query_selector(
+                    'a[href*="accounts.google.com/ServiceLogin"]'
+                )
                 if signin_button:
                     raise PlaywrightError(
                         message="Login not completed",
@@ -224,9 +226,7 @@ class PlaywrightAutomation:
 
             for selector in selectors:
                 try:
-                    saved_button = await page.wait_for_selector(
-                        selector, timeout=5000
-                    )
+                    saved_button = await page.wait_for_selector(selector, timeout=5000)
                     if saved_button:
                         break
                 except Exception:
@@ -256,9 +256,7 @@ class PlaywrightAutomation:
 
             for selector in unsave_selectors:
                 try:
-                    unsave_element = await page.wait_for_selector(
-                        selector, timeout=3000
-                    )
+                    unsave_element = await page.wait_for_selector(selector, timeout=3000)
                     if unsave_element:
                         await unsave_element.click()
                         await asyncio.sleep(0.5)
