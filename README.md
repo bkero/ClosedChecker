@@ -2,6 +2,8 @@
 
 A Python web application that helps you identify and remove closed businesses from your Google Maps saved places lists.
 
+[![CI](https://github.com/bkero/ClosedChecker/actions/workflows/ci.yml/badge.svg)](https://github.com/bkero/ClosedChecker/actions/workflows/ci.yml)
+
 ## Features
 
 - **Import Google Takeout Data**: Upload your Google Takeout export (ZIP or JSON) containing saved places
