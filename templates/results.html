@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Status Check Results</h1>
+
+    <div id="loadingIndicator">
+        <p>Loading results...</p>
+    </div>
+
+    <div id="resultsContent" class="hidden">
+        <section class="summary-section">
+            <h2>Summary</h2>
+            <div class="status-cards" id="statusCards">
+                <!-- Filled by JavaScript -->
+            </div>
+        </section>
+
+        <section class="filter-section">
+            <h2>Filter Results</h2>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="OPERATIONAL">Operational</button>
+                <button class="filter-btn" data-filter="CLOSED_TEMPORARILY">Closed Temporarily</button>
+                <button class="filter-btn" data-filter="CLOSED_PERMANENTLY">Closed Permanently</button>
+                <button class="filter-btn" data-filter="UNKNOWN">Unknown</button>
+            </div>
+        </section>
+
+        <section class="export-section">
+            <h2>Export</h2>
+            <div class="export-buttons">
+                <a href="#" id="exportJsonAll" class="btn btn-secondary">Export All (JSON)</a>
+                <a href="#" id="exportCsvAll" class="btn btn-secondary">Export All (CSV)</a>
+                <a href="#" id="exportJsonClosed" class="btn btn-secondary">Export Closed (JSON)</a>
+                <a href="#" id="exportCsvClosed" class="btn btn-secondary">Export Closed (CSV)</a>
+            </div>
+        </section>
+
+        <section class="results-section">
+            <h2>Places</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Source List</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable">
+                    <!-- Filled by JavaScript -->
+                </tbody>
+            </table>
+        </section>
+
+        <section class="action-section">
+            <a href="/removal/{{ session_id }}" class="btn btn-primary btn-large">Proceed to Removal</a>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const sessionId = '{{ session_id }}';
+    let allPlaces = [];
+
+    async function loadResults() {
+        try {
+            // Load summary
+            const summaryResponse = await fetch('/api/places/summary/' + sessionId);
+            if (!summaryResponse.ok) throw new Error('Failed to load summary');
+            const summary = await summaryResponse.json();
+
+            // Load all places
+            const placesResponse = await fetch('/api/places/results/' + sessionId);
+            if (!placesResponse.ok) throw new Error('Failed to load places');
+            allPlaces = await placesResponse.json();
+
+            // Display summary cards
+            const statusCards = document.getElementById('statusCards');
+            statusCards.innerHTML = `
+                <div class="status-card total">
+                    <span class="count">${summary.total}</span>
+                    <span class="label">Total</span>
+                </div>
+                <div class="status-card operational">
+                    <span class="count">${summary.by_status.operational}</span>
+                    <span class="label">Operational</span>
+                </div>
+                <div class="status-card closed-temp">
+                    <span class="count">${summary.by_status.closed_temporarily}</span>
+                    <span class="label">Closed Temporarily</span>
+                </div>
+                <div class="status-card closed-perm">
+                    <span class="count">${summary.by_status.closed_permanently}</span>
+                    <span class="label">Closed Permanently</span>
+                </div>
+                <div class="status-card unknown">
+                    <span class="count">${summary.by_status.unknown}</span>
+                    <span class="label">Unknown</span>
+                </div>
+            `;
+
+            // Display places
+            displayPlaces(allPlaces);
+
+            // Setup export links
+            setupExportLinks();
+
+            // Show content
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            document.getElementById('resultsContent').classList.remove('hidden');
+
+        } catch (error) {
+            document.getElementById('loadingIndicator').innerHTML =
+                '<p class="error">Error loading results: ' + error.message + '</p>';
+        }
+    }
+
+    function displayPlaces(places) {
+        const tbody = document.getElementById('resultsTable');
+        tbody.innerHTML = places.map(place => `
+            <tr class="status-${place.business_status.toLowerCase().replace('_', '-')}">
+                <td>
+                    <a href="${place.google_maps_url}" target="_blank">${escapeHtml(place.name)}</a>
+                </td>
+                <td>${escapeHtml(place.address || '-')}</td>
+                <td><span class="status-badge ${place.business_status.toLowerCase()}">${formatStatus(place.business_status)}</span></td>
+                <td>${escapeHtml(place.source_list || '-')}</td>
+                <td>
+                    <a href="${place.google_maps_url}" target="_blank" class="btn btn-small">View</a>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function formatStatus(status) {
+        return status.replace(/_/g, ' ').toLowerCase()
+            .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function setupExportLinks() {
+        document.getElementById('exportJsonAll').href = '/api/export/json/' + sessionId;
+        document.getElementById('exportCsvAll').href = '/api/export/csv/' + sessionId;
+        document.getElementById('exportJsonClosed').href = '/api/export/json/' + sessionId +
+            '?status=CLOSED_TEMPORARILY&status=CLOSED_PERMANENTLY';
+        document.getElementById('exportCsvClosed').href = '/api/export/csv/' + sessionId +
+            '?status=CLOSED_TEMPORARILY&status=CLOSED_PERMANENTLY';
+    }
+
+    // Filter handling
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filter = btn.dataset.filter;
+            if (filter === 'all') {
+                displayPlaces(allPlaces);
+            } else {
+                displayPlaces(allPlaces.filter(p => p.business_status === filter));
+            }
+        });
+    });
+
+    // Load results on page load
+    loadResults();
+</script>
+{% endblock %}

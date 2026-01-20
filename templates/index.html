@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Google Maps Closed Places Manager</h1>
+    <p class="subtitle">Find and remove closed businesses from your saved places</p>
+
+    <section class="upload-section">
+        <h2>Step 1: Upload Your Google Takeout Export</h2>
+        <p>Export your saved places from <a href="https://takeout.google.com/" target="_blank">Google Takeout</a> (select "Maps (your places)")</p>
+
+        <div class="upload-area" id="uploadArea">
+            <input type="file" id="fileInput" accept=".zip,.json,.geojson" hidden>
+            <div class="upload-content">
+                <div class="upload-icon">📁</div>
+                <p>Drop your Takeout ZIP or JSON file here</p>
+                <p class="upload-hint">or click to select a file</p>
+            </div>
+        </div>
+
+        <div id="uploadProgress" class="progress-container hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="uploadProgressBar"></div>
+            </div>
+            <p id="uploadStatus">Uploading...</p>
+        </div>
+
+        <div id="uploadResult" class="result-box hidden">
+            <h3>Upload Complete</h3>
+            <p><strong id="placesCount">0</strong> places found</p>
+            <div id="listsSummary"></div>
+        </div>
+    </section>
+
+    <section class="api-section hidden" id="apiSection">
+        <h2>Step 2: Check Business Status</h2>
+        <p>Enter your Google Places API key to check which places are still operational.</p>
+
+        <div class="form-group">
+            <label for="apiKey">Google Places API Key</label>
+            <input type="password" id="apiKey" placeholder="Your API key">
+            <p class="hint">
+                Get an API key from the
+                <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>
+            </p>
+        </div>
+
+        <button id="checkStatusBtn" class="btn btn-primary">Check Status</button>
+
+        <div id="checkProgress" class="progress-container hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="checkProgressBar"></div>
+            </div>
+            <p id="checkStatus">Checking places...</p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Store session ID after upload
+    let sessionId = null;
+
+    // File upload handling
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadProgressBar = document.getElementById('uploadProgressBar');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadResult = document.getElementById('uploadResult');
+    const placesCount = document.getElementById('placesCount');
+    const listsSummary = document.getElementById('listsSummary');
+    const apiSection = document.getElementById('apiSection');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) {
+            handleFile(fileInput.files[0]);
+        }
+    });
+
+    async function handleFile(file) {
+        uploadProgress.classList.remove('hidden');
+        uploadResult.classList.add('hidden');
+        uploadProgressBar.style.width = '0%';
+        uploadStatus.textContent = 'Uploading...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            uploadProgressBar.style.width = '50%';
+            const response = await fetch('/api/upload/file', {
+                method: 'POST',
+                body: formData
+            });
+
+            uploadProgressBar.style.width = '100%';
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Upload failed');
+            }
+
+            const result = await response.json();
+            sessionId = result.session_id;
+
+            uploadStatus.textContent = 'Upload complete!';
+            uploadResult.classList.remove('hidden');
+            placesCount.textContent = result.places_count;
+
+            if (result.lists_found && result.lists_found.length > 0) {
+                listsSummary.innerHTML = '<p>Lists found: ' + result.lists_found.join(', ') + '</p>';
+            }
+
+            apiSection.classList.remove('hidden');
+
+        } catch (error) {
+            uploadStatus.textContent = 'Error: ' + error.message;
+            uploadProgressBar.style.width = '0%';
+        }
+    }
+
+    // Status check handling
+    const checkStatusBtn = document.getElementById('checkStatusBtn');
+    const apiKeyInput = document.getElementById('apiKey');
+    const checkProgress = document.getElementById('checkProgress');
+    const checkProgressBar = document.getElementById('checkProgressBar');
+    const checkStatusText = document.getElementById('checkStatus');
+
+    checkStatusBtn.addEventListener('click', async () => {
+        if (!sessionId) {
+            alert('Please upload a file first');
+            return;
+        }
+
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) {
+            alert('Please enter your API key');
+            return;
+        }
+
+        checkStatusBtn.disabled = true;
+        checkProgress.classList.remove('hidden');
+        checkProgressBar.style.width = '0%';
+        checkStatusText.textContent = 'Starting status check...';
+
+        try {
+            // Start the check
+            const startResponse = await fetch('/api/places/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    api_key: apiKey
+                })
+            });
+
+            if (!startResponse.ok) {
+                const error = await startResponse.json();
+                throw new Error(error.detail || 'Failed to start status check');
+            }
+
+            const startResult = await startResponse.json();
+            const jobId = startResult.job_id;
+
+            // Poll for progress
+            await pollJobProgress(jobId, checkProgressBar, checkStatusText);
+
+            // Redirect to results page
+            window.location.href = '/results/' + sessionId;
+
+        } catch (error) {
+            checkStatusText.textContent = 'Error: ' + error.message;
+            checkStatusBtn.disabled = false;
+        }
+    });
+
+    async function pollJobProgress(jobId, progressBar, statusText) {
+        while (true) {
+            const response = await fetch('/api/places/check/' + jobId);
+            const result = await response.json();
+
+            progressBar.style.width = result.progress.percentage + '%';
+            statusText.textContent = result.progress.message || 'Processing...';
+
+            if (result.status === 'completed') {
+                statusText.textContent = 'Status check complete!';
+                break;
+            } else if (result.status === 'failed') {
+                throw new Error(result.error || 'Status check failed');
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+</script>
+{% endblock %}

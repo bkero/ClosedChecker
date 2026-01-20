@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Playwright authentication state (contains sensitive data)
+playwright_auth/
+
+# Temporary uploads
+uploads/
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage.xml
+*.cover
+
+# Test artifacts
+.tox/
+.nox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local test files
+takeout.zip
+*.takeout.zip
+takeout-*.zip
+takeout-out/
+
+# Environment files with secrets
+.env.local
+.env.*.local

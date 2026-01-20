@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Remove Saved Places</h1>
+
+    <section class="auth-section" id="authSection">
+        <h2>Step 1: Authenticate with Google</h2>
+        <p>You need to log in to your Google account to remove places from your saved lists.</p>
+
+        <div id="authStatus" class="auth-status">
+            <p>Checking authentication status...</p>
+        </div>
+
+        <button id="authBtn" class="btn btn-primary hidden">Start Authentication</button>
+        <p id="authInstructions" class="hint hidden">
+            A browser window will open. Please log in to your Google account and return here when done.
+        </p>
+    </section>
+
+    <section class="selection-section hidden" id="selectionSection">
+        <h2>Step 2: Select Places to Remove</h2>
+
+        <div class="selection-controls">
+            <button id="selectAllClosed" class="btn btn-secondary">Select All Closed</button>
+            <button id="selectNone" class="btn btn-secondary">Clear Selection</button>
+            <span id="selectionCount">0 places selected</span>
+        </div>
+
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAllCheckbox"></th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Address</th>
+                </tr>
+            </thead>
+            <tbody id="placesTable">
+                <!-- Filled by JavaScript -->
+            </tbody>
+        </table>
+    </section>
+
+    <section class="removal-section hidden" id="removalSection">
+        <h2>Step 3: Remove Selected Places</h2>
+
+        <div class="warning-box">
+            <p><strong>Warning:</strong> This will remove the selected places from your Google Maps saved lists. This action cannot be undone.</p>
+        </div>
+
+        <button id="removeBtn" class="btn btn-danger btn-large">Remove Selected Places</button>
+
+        <div id="removalProgress" class="progress-container hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="removalProgressBar"></div>
+            </div>
+            <p id="removalStatus">Removing places...</p>
+        </div>
+
+        <div id="removalResults" class="hidden">
+            <h3>Removal Results</h3>
+            <div id="removalSummary"></div>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Result</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="removalResultsTable">
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const sessionId = '{{ session_id }}';
+    let places = [];
+    let selectedUrls = new Set();
+
+    // Check authentication status
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/removal/auth/status');
+            const status = await response.json();
+
+            const authStatusDiv = document.getElementById('authStatus');
+            const authBtn = document.getElementById('authBtn');
+            const authInstructions = document.getElementById('authInstructions');
+
+            if (status.authenticated) {
+                authStatusDiv.innerHTML = `
+                    <p class="success">Authenticated</p>
+                    <p class="hint">Last authenticated: ${new Date(status.last_authenticated).toLocaleString()}</p>
+                `;
+                authBtn.classList.add('hidden');
+                loadPlaces();
+            } else {
+                authStatusDiv.innerHTML = `
+                    <p class="warning">Not authenticated</p>
+                    ${status.error ? '<p class="error">' + status.error + '</p>' : ''}
+                `;
+                authBtn.classList.remove('hidden');
+                authInstructions.classList.remove('hidden');
+            }
+        } catch (error) {
+            document.getElementById('authStatus').innerHTML =
+                '<p class="error">Failed to check auth status: ' + error.message + '</p>';
+        }
+    }
+
+    // Start authentication
+    document.getElementById('authBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('authBtn');
+        btn.disabled = true;
+        btn.textContent = 'Opening browser...';
+
+        try {
+            const response = await fetch('/api/removal/auth/start', { method: 'POST' });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Authentication failed');
+            }
+
+            btn.textContent = 'Authentication Complete!';
+            await checkAuthStatus();
+        } catch (error) {
+            btn.disabled = false;
+            btn.textContent = 'Start Authentication';
+            alert('Authentication failed: ' + error.message);
+        }
+    });
+
+    // Load places
+    async function loadPlaces() {
+        try {
+            const response = await fetch('/api/places/results/' + sessionId);
+            if (!response.ok) throw new Error('Failed to load places');
+            places = await response.json();
+
+            displayPlaces();
+            document.getElementById('selectionSection').classList.remove('hidden');
+            document.getElementById('removalSection').classList.remove('hidden');
+        } catch (error) {
+            alert('Failed to load places: ' + error.message);
+        }
+    }
+
+    // Display places with checkboxes
+    function displayPlaces() {
+        const tbody = document.getElementById('placesTable');
+        tbody.innerHTML = places.map((place, index) => `
+            <tr>
+                <td>
+                    <input type="checkbox" class="place-checkbox" data-url="${escapeAttr(place.google_maps_url)}"
+                        ${selectedUrls.has(place.google_maps_url) ? 'checked' : ''}>
+                </td>
+                <td>
+                    <a href="${place.google_maps_url}" target="_blank">${escapeHtml(place.name)}</a>
+                </td>
+                <td><span class="status-badge ${place.business_status.toLowerCase()}">${formatStatus(place.business_status)}</span></td>
+                <td>${escapeHtml(place.address || '-')}</td>
+            </tr>
+        `).join('');
+
+        // Add event listeners to checkboxes
+        document.querySelectorAll('.place-checkbox').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.checked) {
+                    selectedUrls.add(cb.dataset.url);
+                } else {
+                    selectedUrls.delete(cb.dataset.url);
+                }
+                updateSelectionCount();
+            });
+        });
+
+        updateSelectionCount();
+    }
+
+    // Selection controls
+    document.getElementById('selectAllClosed').addEventListener('click', () => {
+        selectedUrls.clear();
+        places.forEach(p => {
+            if (p.business_status === 'CLOSED_PERMANENTLY' || p.business_status === 'CLOSED_TEMPORARILY') {
+                selectedUrls.add(p.google_maps_url);
+            }
+        });
+        displayPlaces();
+    });
+
+    document.getElementById('selectNone').addEventListener('click', () => {
+        selectedUrls.clear();
+        displayPlaces();
+    });
+
+    document.getElementById('selectAllCheckbox').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            places.forEach(p => selectedUrls.add(p.google_maps_url));
+        } else {
+            selectedUrls.clear();
+        }
+        displayPlaces();
+    });
+
+    function updateSelectionCount() {
+        document.getElementById('selectionCount').textContent =
+            selectedUrls.size + ' places selected';
+    }
+
+    // Removal
+    document.getElementById('removeBtn').addEventListener('click', async () => {
+        if (selectedUrls.size === 0) {
+            alert('Please select at least one place to remove');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to remove ${selectedUrls.size} places from your saved lists?`)) {
+            return;
+        }
+
+        const btn = document.getElementById('removeBtn');
+        btn.disabled = true;
+        document.getElementById('removalProgress').classList.remove('hidden');
+        document.getElementById('removalResults').classList.add('hidden');
+
+        try {
+            const response = await fetch('/api/removal/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    place_urls: Array.from(selectedUrls)
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to start removal');
+            }
+
+            const result = await response.json();
+            await pollRemovalProgress(result.job_id);
+
+        } catch (error) {
+            document.getElementById('removalStatus').textContent = 'Error: ' + error.message;
+            btn.disabled = false;
+        }
+    });
+
+    async function pollRemovalProgress(jobId) {
+        const progressBar = document.getElementById('removalProgressBar');
+        const statusText = document.getElementById('removalStatus');
+
+        while (true) {
+            const response = await fetch('/api/removal/result/' + jobId);
+            const result = await response.json();
+
+            progressBar.style.width = result.progress.percentage + '%';
+            statusText.textContent = result.progress.message || 'Processing...';
+
+            if (result.status === 'completed') {
+                displayRemovalResults(result);
+                break;
+            } else if (result.status === 'failed') {
+                throw new Error(result.error || 'Removal failed');
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+
+    function displayRemovalResults(result) {
+        document.getElementById('removalStatus').textContent = 'Removal complete!';
+        document.getElementById('removalResults').classList.remove('hidden');
+
+        const summary = result.summary;
+        document.getElementById('removalSummary').innerHTML = `
+            <p>Total: ${summary.total}, Successful: ${summary.successful}, Failed: ${summary.failed}</p>
+        `;
+
+        const tbody = document.getElementById('removalResultsTable');
+        tbody.innerHTML = result.results.map(r => `
+            <tr class="${r.success ? 'success' : 'error'}">
+                <td>${escapeHtml(r.name)}</td>
+                <td>${r.success ? 'Removed' : 'Failed'}</td>
+                <td>${r.error || '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Helpers
+    function formatStatus(status) {
+        return status.replace(/_/g, ' ').toLowerCase()
+            .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+        return text.replace(/"/g, '&quot;');
+    }
+
+    // Initialize
+    checkAuthStatus();
+</script>
+{% endblock %}
